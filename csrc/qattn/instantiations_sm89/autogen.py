@@ -41,17 +41,14 @@ param_list = (
 )
 
 # Generate combinations
+filename = "inst_sm89.cu"
+filepath = os.path.join(output_dir, filename)
+f = open(filepath, "w")
+f.write(header)
 for hd, qkg, pv_mode, dtype_out, causal, ret_pv_count, pvacu in product(
         head_dims, qk_quant_grans, pv_threshold_modes, dtypes_out, is_causals, return_pv_counts, use_pv_fp16_accu):
     if ret_pv_count and pv_mode == 0:
         continue
-    filename = (
-        f"inst_sm89_ctaq{CTA_Q}_ctak{CTA_K}_warpq{WARP_Q}_warpk{WARP_K}"
-        f"_hd{hd}_qkg{qkg}_pvacc{DTypePVAccum}_ibuf{bool_to_int(use_inst_buffer)}_pvacum{bool_to_int(pvacu)}"
-        f"_pvth{pv_mode}_o{dtype_out}_causal{bool_to_int(causal)}"
-        f"_fv{bool_to_int(fuse_v_scale)}_retpvth{bool_to_int(ret_pv_count)}.cu"
-    )
-    filepath = os.path.join(output_dir, filename)
 
     instantiation = (
         f"template void SpargeAttentionSM89Dispatched<"
@@ -60,9 +57,7 @@ for hd, qkg, pv_mode, dtype_out, causal, ret_pv_count, pvacu in product(
         f"{str(causal).lower()}, {str(fuse_v_scale).lower()}, {str(ret_pv_count).lower()}"
         f">(\n{param_list.format(dtype_out=dtype_out)});"
     )
-
-    with open(filepath, "w") as f:
-        f.write(header)
-        f.write(instantiation + "\n")
+ 
+    f.write(instantiation + "\n\n")
 
 print(f"Generated {len(os.listdir(output_dir))} instantiations in '{output_dir}'")
