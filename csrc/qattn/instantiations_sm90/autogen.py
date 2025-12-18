@@ -37,17 +37,16 @@ param_list = (
 )
 
 # Generate combinations
+filename = "inst_sm90.cu"
+filepath = os.path.join(output_dir, filename)
+f = open(filepath, "w")
+f.write(header)
 for hd, qkg, pv_mode, dtype_out, causal, ret_pv_count in product(
         head_dims, qk_quant_grans, pv_threshold_modes, dtypes_out, is_causals, return_pv_counts):
     if ret_pv_count and pv_mode == 0:
         continue
 
-    filename = (
-        f"inst_sm90_ctaq{CTA_Q}_ctak{CTA_K}_nt{NUM_THREADS}"
-        f"_hd{hd}_qkg{qkg}_pvth{pv_mode}_o{dtype_out}"
-        f"_causal{bool_to_int(causal)}_fv{bool_to_int(fuse_v_scale)}"
-        f"_retpv{bool_to_int(ret_pv_count)}.cu"
-    )
+
     filepath = os.path.join(output_dir, filename)
 
     instantiation = (
@@ -57,8 +56,6 @@ for hd, qkg, pv_mode, dtype_out, causal, ret_pv_count in product(
         f">(\n{param_list.format(dtype_out=dtype_out)});"
     )
 
-    with open(filepath, "w") as f:
-        f.write(header)
-        f.write(instantiation + "\n")
+    f.write(instantiation + "\n")
 
 print(f"Generated {len(os.listdir(output_dir))} instantiations in '{output_dir}'")
